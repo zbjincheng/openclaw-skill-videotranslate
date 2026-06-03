@@ -124,7 +124,19 @@ class EdgeTTSProvider:
             "ja": "ja-JP-KeitaNeural",
             "ja-jp": "ja-JP-KeitaNeural",
             "es": "es-ES-AlvaroNeural",
-            "es-es": "es-ES-AlvaroNeural"
+            "es-es": "es-ES-AlvaroNeural",
+            "fr": "fr-FR-EloiseNeural",
+            "fr-fr": "fr-FR-EloiseNeural",
+            "de": "de-DE-KillianNeural",
+            "de-de": "de-DE-KillianNeural",
+            "ko": "ko-KR-SunHiNeural",
+            "ko-kr": "ko-KR-SunHiNeural",
+            "it": "it-IT-DiegoNeural",
+            "it-it": "it-IT-DiegoNeural",
+            "ru": "ru-RU-DmitryNeural",
+            "ru-ru": "ru-RU-DmitryNeural",
+            "pt": "pt-BR-AntonioNeural",
+            "pt-br": "pt-BR-AntonioNeural"
         }
 
         # Resolve voice id based on target mapping if matching key
