@@ -164,6 +164,7 @@ class ManifestParams:
     translation_provider: str
     translation_endpoint: str
     translation_credential: str
+    source_language: str = "en"
     translation_extra: dict[str, Any] = field(default_factory=dict)
     translation_rate_limit: ProviderRateLimitConfig = field(
         default_factory=lambda: ProviderRateLimitConfig(**_DEFAULT_TRANSLATION_RATE_LIMIT)
@@ -456,6 +457,15 @@ def parse_manifest(
         field_name="translation_rate_limit",
     )
 
+    # ---- source_language (R1.2) ---------------------------------------------
+    raw_source = params.get("source_language", "en")
+    if not isinstance(raw_source, str) or raw_source.strip() == "":
+        raise ManifestParamMissingError(
+            "source_language must be a non-empty string",
+            context={"missing_fields": ["source_language"]},
+        )
+    source_language = raw_source
+
     # ---- target_language (R1.2) ---------------------------------------------
     raw_target = params.get("target_language", "zh-CN")
     if not isinstance(raw_target, str) or raw_target.strip() == "":
@@ -542,6 +552,7 @@ def parse_manifest(
     return ManifestParams(
         video_path=video_path,
         subtitle_path=subtitle_path,
+        source_language=source_language,
         target_language=target_language,
         processing_mode=processing_mode,
         voice_id=voice_id,

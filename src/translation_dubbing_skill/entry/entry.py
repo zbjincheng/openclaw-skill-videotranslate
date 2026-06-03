@@ -290,6 +290,7 @@ async def run(
         config=translation_config,
         rate_limit_config=params.translation_rate_limit,
         target_language=params.target_language,
+        source_language=params.source_language,
     )
 
     # --- 4. Serialize both subtitle tracks to UTF-8 files. ---------------
@@ -335,9 +336,12 @@ async def run(
             credential=params.tts_credential,
             extra=dict(params.tts_extra),
         )
+        # Fallback to target_language code if voice_id is not explicitly given,
+        # so target-language voice mapping takes effect in TTS providers (like Edge).
+        effective_voice_id = params.voice_id or params.target_language
         clips = await tts_engine.synthesize(
             zh_entries,
-            voice_id=params.voice_id,
+            voice_id=effective_voice_id,
             provider_type=params.tts_provider,
             config=tts_config,
             rate_limit_config=params.tts_rate_limit,

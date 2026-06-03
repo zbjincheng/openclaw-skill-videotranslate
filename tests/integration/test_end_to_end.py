@@ -115,6 +115,7 @@ class _MockTranslator:
         config: ProviderConfig,
         rate_limit_config: ProviderRateLimitConfig,
         target_language: str = "zh-CN",
+        source_language: str = "en",
     ) -> list[SubtitleEntry]:
         self.calls += 1
         out: list[SubtitleEntry] = []

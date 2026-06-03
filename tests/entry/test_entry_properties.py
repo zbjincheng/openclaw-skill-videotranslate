@@ -130,6 +130,7 @@ class _StubTranslator:
         config: ProviderConfig,
         rate_limit_config: ProviderRateLimitConfig,
         target_language: str = "zh-CN",
+        source_language: str = "en",
     ) -> list[SubtitleEntry]:
         translated: list[SubtitleEntry] = []
         for e in entries:

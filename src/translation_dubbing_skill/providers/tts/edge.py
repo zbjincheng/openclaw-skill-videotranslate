@@ -115,7 +115,22 @@ class EdgeTTSProvider:
                 context={"provider_type": self.provider_type},
             ) from exc
 
-        voice = voice_id or self.default_voice
+        # Multi-language voice mapping table
+        voice_mapping = {
+            "zh-cn": "zh-CN-YunxiNeural",
+            "zh": "zh-CN-YunxiNeural",
+            "en": "en-US-GuyNeural",
+            "en-us": "en-US-GuyNeural",
+            "ja": "ja-JP-KeitaNeural",
+            "ja-jp": "ja-JP-KeitaNeural",
+            "es": "es-ES-AlvaroNeural",
+            "es-es": "es-ES-AlvaroNeural"
+        }
+
+        # Resolve voice id based on target mapping if matching key
+        requested_voice = voice_id or self.default_voice
+        voice = voice_mapping.get(requested_voice.lower(), requested_voice)
+
         communicator = edge_tts.Communicate(
             text,
             voice,

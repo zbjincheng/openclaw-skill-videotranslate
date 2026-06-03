@@ -194,6 +194,7 @@ class LLMTranslationProvider:
         self,
         entries: list[SubtitleEntry],
         target_language: str = "zh-CN",
+        source_language: str = "en",
     ) -> list[SubtitleEntry]:
         """Translate ``entries`` in one LLM call.
 
@@ -207,6 +208,8 @@ class LLMTranslationProvider:
                 an empty list without making any HTTP call).
             target_language: BCP-47 target language tag. Default
                 ``"zh-CN"``.
+            source_language: BCP-47 source language tag. Default
+                ``"en"``.
 
         Returns:
             Translated entries aligned 1:1 with ``entries``.
@@ -221,7 +224,7 @@ class LLMTranslationProvider:
         if not entries:
             return []
 
-        payload = self._build_request_body(entries, target_language)
+        payload = self._build_request_body(entries, target_language, source_language)
         headers = {
             "Authorization": f"Bearer {self.credential}",
             "Content-Type": "application/json",
@@ -260,9 +263,10 @@ class LLMTranslationProvider:
         self,
         entries: list[SubtitleEntry],
         target_language: str = "zh-CN",
+        source_language: str = "en",
     ) -> list[SubtitleEntry]:
         """Compatibility alias; delegates to :meth:`translate_batch`."""
-        return await self.translate_batch(entries, target_language)
+        return await self.translate_batch(entries, target_language, source_language)
 
     # ------------------------------------------------------------------
     # Helpers — request construction
@@ -272,6 +276,7 @@ class LLMTranslationProvider:
         self,
         entries: list[SubtitleEntry],
         target_language: str,
+        source_language: str = "en",
     ) -> dict[str, Any]:
         """Construct the chat-completions request body.
 
@@ -295,8 +300,8 @@ class LLMTranslationProvider:
         items = [{"id": entry.index, "text": entry.text} for entry in entries]
         system_prompt = (
             "You are a professional subtitle translator. "
-            "Translate every subtitle entry from its source language into "
-            f"{target_language}. "
+            f"Translate every subtitle entry from source language '{source_language}' into "
+            f"target language '{target_language}'. "
             "Preserve meaning, punctuation and tone. "
             "Output ONLY a raw JSON array matching the input order and length. "
             'Every element MUST be shaped as {"id": <input id>, "translation": '
@@ -304,7 +309,7 @@ class LLMTranslationProvider:
             "<think> tags, no prose before or after the JSON."
         )
         user_prompt = (
-            f"Translate this batch into {target_language} and return the JSON array:\n"
+            f"Translate this batch from {source_language} into {target_language} and return the JSON array:\n"
             f"{json.dumps(items, ensure_ascii=False)}"
         )
         body: dict[str, Any] = {

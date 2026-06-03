@@ -158,6 +158,7 @@ class Translator:
         config: ProviderConfig,
         rate_limit_config: ProviderRateLimitConfig,
         target_language: str = "zh-CN",
+        source_language: str = "en",
     ) -> list[SubtitleEntry]:
         """Translate ``entries`` into ``target_language`` via the provider.
 
@@ -175,8 +176,9 @@ class Translator:
                 accurate estimates.
             target_language: BCP-47 language tag of the desired output.
                 Defaults to ``"zh-CN"``; providers are free to accept
-                any valid tag but the translator's semantic contract
-                only validates simplified Chinese output.
+                any valid tag.
+            source_language: BCP-47 language tag of the source language.
+                Defaults to ``"en"``.
 
         Returns:
             A list of :class:`SubtitleEntry` of the same length and
@@ -197,7 +199,7 @@ class Translator:
             ProviderContractViolationError: The provider's response
                 violated the structural contract (length / index /
                 start_ms / end_ms) or the semantic contract
-                (empty→empty; non-empty→non-empty simplified Chinese)
+                (empty→empty; non-empty→non-empty text matching language checks)
                 (R7.6).
         """
         total = len(entries)
@@ -245,13 +247,24 @@ class Translator:
         # --- 5. Build the scheduler + progress-tracking fetch. -------
         completed = 0
 
-        async def fetch(batch: list[SubtitleEntry]) -> list[SubtitleEntry]:
-            outputs = await provider.translate_batch(batch, target_language)
+        async def fetch(
+            batch: list[SubtitleEntry],
+        ) -> list[SubtitleEntry]:
+            # Some providers accept source_language too.
+            # To be compatible, we can check if provider method supports source_language,
+            # or pass it if it accepts positional/keyword args.
+            try:
+                outputs = await provider.translate_batch(
+                    batch,
+                    target_language=target_language,
+                    source_language=source_language,
+                )
+            except TypeError:
+                # Fallback for providers that don't accept source_language yet
+                outputs = await provider.translate_batch(batch, target_language)
+
             # R12.16: report cumulative progress after every successful
-            # batch. We ignore the possibility of over-counting if the
-            # provider returns the wrong length — the scheduler itself
-            # catches that case and raises SchedulerBatchFailure, which
-            # this coordinator converts to ContractViolationError below.
+            # batch.
             nonlocal completed
             completed += len(batch)
             self._report_progress(total=total, completed=completed)
@@ -299,6 +312,7 @@ class Translator:
             inputs=non_empty_entries,
             outputs=translated_non_empty,
             provider_type=provider_type,
+            target_language=target_language,
         )
 
         # --- 8. Merge non-empty outputs with empty placeholders. ----
@@ -391,6 +405,7 @@ class Translator:
         inputs: list[SubtitleEntry],
         outputs: list[SubtitleEntry],
         provider_type: str,
+        target_language: str = "zh-CN",
     ) -> None:
         """Check structural + semantic contracts; raise on violation.
 
@@ -401,9 +416,9 @@ class Translator:
         Semantic (R7.2):
             - For every ``i``: whitespace-only input produces
               ``output.text == ""``
-            - For every ``i``: non-empty input produces non-empty text
-              containing at least one CJK ideograph (simplified Chinese
-              proxy)
+            - For every ``i``: non-empty input produces non-empty text.
+              If target_language is Simplified / Traditional Chinese (starts with 'zh'),
+              we additionally verify it contains at least one CJK ideograph (R7.2).
 
         Raises :class:`ProviderContractViolationError` with ``stage="translating"``
         and ``context`` carrying the violated clause and the offending
@@ -481,17 +496,19 @@ class Translator:
                     },
                     stage="translating",
                 )
-            if not _contains_cjk(text):
-                raise ProviderContractViolationError(
-                    "provider produced translation without simplified Chinese characters",
-                    context={
-                        "violated_clause": "non_simplified_chinese_output",
-                        "provider_type": provider_type,
-                        "entry_index": src.index,
-                        "position": position,
-                    },
-                    stage="translating",
-                )
+            # Only enforce CJK validation if translating to Chinese
+            if target_language.lower().startswith("zh"):
+                if not _contains_cjk(text):
+                    raise ProviderContractViolationError(
+                        "provider produced translation without simplified Chinese characters",
+                        context={
+                            "violated_clause": "non_simplified_chinese_output",
+                            "provider_type": provider_type,
+                            "entry_index": src.index,
+                            "position": position,
+                        },
+                        stage="translating",
+                    )
 
     # ------------------------------------------------------------------
     # Progress

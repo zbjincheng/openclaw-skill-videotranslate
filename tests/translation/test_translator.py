@@ -685,3 +685,30 @@ async def test_progress_not_called_when_reporter_is_none(
         rate_limit_config=_make_rate_limit_config(),
     )
     assert len(out) == 1
+
+
+@pytest.mark.asyncio
+async def test_non_chinese_translation_skips_cjk_verification(
+    config: ProviderConfig,
+) -> None:
+    """If target_language is non-Chinese (e.g. 'en'), latin text output must not raise contract errors."""
+    registry = ProviderRegistry()
+    registry.register("translation", "violator", _ContractBreakingProvider)
+    translator = Translator(registry)
+
+    # Set mode to 'non_chinese' which returns 'latin text only' (traditionally failing CJK check)
+    _ContractBreakingProvider.mode = "non_chinese"  # type: ignore[misc]
+
+    entries = [_entry(1, 0, 1_000, "こんにちは")]
+    # target_language is 'en', so it must skip CJK check and complete successfully.
+    out = await translator.translate(
+        entries=entries,
+        provider_type="violator",
+        config=config,
+        rate_limit_config=_make_rate_limit_config(),
+        target_language="en",
+        source_language="ja",
+    )
+    assert len(out) == 1
+    assert out[0].text == "latin text only"
+

@@ -27,12 +27,16 @@ inputs:
     type: path
     required: false
     description: 可选的外挂字幕文件（.srt / .vtt）；缺失时从视频内嵌英文字幕轨提取
+  source_language:
+    type: string
+    required: true
+    default: en
+    description: 原始视频字幕语言（如 en, zh-CN, ja 等）（R1.2）
   target_language:
-    type: enum
-    values: [zh-CN]
+    type: string
     required: true
     default: zh-CN
-    description: 目标翻译语言（R1.2）
+    description: 目标翻译语言（如 zh-CN, en, ja 等）（R1.2）
   processing_mode:
     type: enum
     values: [subtitle_only, subtitle_and_dubbing]
