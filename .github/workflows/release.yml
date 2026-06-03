@@ -1,0 +1,43 @@
+name: Draft and Publish GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger release pipeline only when pushing version tags like v0.1.0
+
+permissions:
+  contents: write # Essential permission to write draft release and upload assets
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install packaging tool (build)
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+
+    - name: Build Source and Binary Distributions
+      run: |
+        python -m build
+
+    - name: Create GitHub Release and Upload Assets
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          dist/*.tar.gz
+          dist/*.whl
+        generate_release_notes: true # Auto-generates changelog from commit logs
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
