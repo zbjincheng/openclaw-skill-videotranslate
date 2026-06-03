@@ -6,15 +6,15 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
 [![Framework](https://img.shields.io/badge/framework-OpenClaw-orange.svg)](https://github.com/OpenClaw)
 
-一个高质量的 **OpenClaw 技能（Skill）**：将英文视频的字幕自动翻译为简体中文，并可选择基于中文语音合成（TTS）以及音轨时间对齐技术，生成具有**双音轨、双字幕轨**的高品质中文配音视频。
+一个高质量的 **OpenClaw 技能（Skill）**：支持在多种语言（如英文、中文、日文、西班牙文、法文、德文、韩文等）之间进行视频字幕自动翻译与配音，并可选择基于目标语言语音合成（TTS，支持自动语种映射）以及音轨时间对齐技术，生成具有**双音轨、双字幕轨**的高品质配音视频。
 
 ---
 
 ## 🌟 核心特性
 
 - 🛠 **双模式灵活处理**：
-  - **`subtitle_only`**（仅字幕模式）：仅翻译字幕。输出视频保留原始英文音轨（默认），内嵌原英文和翻译后的中文双字幕轨，并输出独立 `.srt`/`.vtt` 中文字幕文件。
-  - **`subtitle_and_dubbing`**（字幕+配音模式，默认）：翻译字幕并配音。利用 TTS 生成中文配音，自动根据原字幕时间轴进行**音频伸缩与对齐**，无损合成包含中/英双音轨、中/英双字幕轨的视频，中文音轨及字幕轨默认开启。
+  - **`subtitle_only`**（仅字幕模式）：仅翻译字幕。输出视频保留原始音轨（默认），内嵌源语言和翻译后的目标语言双字幕轨，并输出独立 `.srt`/`.vtt` 目标语言字幕文件。
+  - **`subtitle_and_dubbing`**（字幕+配音模式，默认）：翻译字幕并配音。利用 TTS 生成目标语言配音，自动根据原字幕时间轴进行**音频伸缩与对齐**，无损合成包含源语言/目标语言双音轨、源语言/目标语言双字幕轨的视频，目标语言音轨及字幕轨默认开启。
 - ⚖ **三维自适应调度器 (Adaptive Scheduler)**：
   - 内置了**批量 (Batch Size)**、**文本量 (Payload Size)**、**并发度 (Concurrency)** 三维自适应调节策略。
   - 能够自适应应对大模型 API 的 Rate Limit（频率限制）及 Context Window 限制，并在遇到 429 报错或 Context 溢出时自动降级重试与重新切片，极大降低调用成本和失败概率。
@@ -75,8 +75,10 @@ cp .env.example .env
 
 | 参数名 | 类型 | 是否必填 | 默认值 | 描述 |
 | :--- | :--- | :--- | :--- | :--- |
-| `video_path` | `path` | 是 | - | 输入的原始英文视频路径 |
+| `video_path` | `path` | 是 | - | 输入的原始视频路径 |
 | `subtitle_path` | `path` | 否 | - | 外挂字幕（.srt/.vtt）。缺省时自动提取视频内嵌字幕 |
+| `source_language` | `string`| 是 | `en` | 原始视频/字幕语言（如 `en`, `zh-CN`, `ja` 等） |
+| `target_language` | `string`| 是 | `zh-CN` | 目标翻译/TTS语言（如 `zh-CN`, `en`, `ja` 等） |
 | `processing_mode` | `enum` | 是 | `subtitle_and_dubbing` | 运行模式：`subtitle_only` 或 `subtitle_and_dubbing` |
 | `translation_provider` | `enum` | 是 | - | 翻译提供方：`llm` 或 `web` |
 | `translation_endpoint` | `string`| 是 | - | 翻译服务的 API 端点地址 |

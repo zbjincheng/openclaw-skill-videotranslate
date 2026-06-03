@@ -6,15 +6,15 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
 [![Framework](https://img.shields.io/badge/framework-OpenClaw-orange.svg)](https://github.com/OpenClaw)
 
-A professional-grade **OpenClaw Skill** designed to translate English video subtitles into Simplified Chinese. It optionally synthesizes Chinese voiceovers (TTS), aligns audio duration, and outputs high-quality, multi-track, multi-subtitle videos.
+A professional-grade **OpenClaw Skill** designed to translate video subtitles and dub audio across multiple languages (e.g., English, Chinese, Japanese, Spanish, French, German, Korean, etc.). It optionally synthesizes target-language voiceovers (TTS) with automatic voice mapping, aligns audio duration, and outputs high-quality, multi-track, multi-subtitle videos.
 
 ---
 
 ## 🌟 Key Features
 
 - 🛠 **Dual Processing Modes**:
-  - **`subtitle_only`**: Translates subtitles only. Keeps the original English audio track as the default, embeds both original English and translated Chinese subtitle tracks, and outputs an independent `.srt`/`.vtt` Chinese subtitle file.
-  - **`subtitle_and_dubbing`** (Default): Translates subtitles and dubs audio. Synthesizes Chinese voiceovers via TTS, aligns and stretches audio clips to fit the original timeline, and muxes them into a dual-audio, dual-subtitle video (Chinese audio and subtitles enabled by default).
+  - **`subtitle_only`**: Translates subtitles only. Keeps the original audio track as the default, embeds both original source and translated target subtitle tracks, and outputs an independent target-language `.srt`/`.vtt` subtitle file.
+  - **`subtitle_and_dubbing`** (Default): Translates subtitles and dubs audio. Synthesizes voiceovers in the target language via TTS, automatically aligns and stretches audio clips to fit the original timeline, and muxes them into a dual-audio, dual-subtitle video (target-language audio and subtitles enabled by default).
 - ⚖ **3D Adaptive Scheduler**:
   - Implements an advanced scheduling algorithm that adaptively balances **Batch Size**, **Payload Size (tokens/chars)**, and **Concurrency**.
   - Gracefully handles API rate limits (HTTP 429) and context window overflows by dynamically scaling back concurrency, resizing batches, and re-slicing payloads with randomized exponential backoff.
@@ -75,8 +75,10 @@ As an OpenClaw skill, the configuration parameters are declared in the `manifest
 
 | Parameter | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `video_path` | `path` | Yes | - | Path to the source English video file |
+| `video_path` | `path` | Yes | - | Path to the source video file |
 | `subtitle_path` | `path` | No | - | Path to external subtitle (.srt/.vtt); extracts embedded track if omitted |
+| `source_language` | `string`| Yes | `en` | Source language of the video/subtitle (e.g., `en`, `zh-CN`, `ja`) |
+| `target_language` | `string`| Yes | `zh-CN` | Target language for translation/TTS (e.g., `zh-CN`, `en`, `ja`) |
 | `processing_mode` | `enum` | Yes | `subtitle_and_dubbing` | Running mode: `subtitle_only` or `subtitle_and_dubbing` |
 | `translation_provider` | `enum` | Yes | - | Translation backend provider: `llm` or `web` |
 | `translation_endpoint` | `string`| Yes | - | HTTP endpoint for the translation service |
