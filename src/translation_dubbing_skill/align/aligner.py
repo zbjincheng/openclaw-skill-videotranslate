@@ -200,8 +200,15 @@ class AudioAligner:
             placed_duration = len(segment)
             return segment, target_start, placed_duration
 
-        # Need to speed up. rate > 1 compresses playback length.
+        # Speed check: if we need to speed up, but the calculated rate is extremely close to 1.0
+        # (e.g. less than 1.01 or accumulating FP error), we can avoid scaling.
         rate = duration_ms / available
+        if abs(rate - 1.0) < 0.005:
+            segment = source[:available]
+            placed_duration = len(segment)
+            return segment, target_start, placed_duration
+
+        # Need to speed up. rate > 1 compresses playback length.
         sped_bytes = self._atempo_fn(clip.audio, rate)
         sped = AudioSegment.from_file(BytesIO(sped_bytes), format="wav")
         if len(sped) > available:

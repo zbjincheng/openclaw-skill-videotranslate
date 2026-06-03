@@ -198,10 +198,13 @@ class TTSEngine:
         supports_batch = bool(getattr(provider, "supports_batch", False))
         completed = 0
 
+        # Import the text normalizer
+        from translation_dubbing_skill.tts.text_normalizer import normalize_chinese_text
+
         async def fetch_batch(
             batch: list[SubtitleEntry],
         ) -> list[tuple[bytes, int]]:
-            texts = [e.text for e in batch]
+            texts = [normalize_chinese_text(e.text) for e in batch]
             outputs = await provider.synth_batch(texts, effective_voice)
             nonlocal completed
             completed += len(batch)
@@ -216,7 +219,8 @@ class TTSEngine:
             # keeps the fetch correct if a future change allows >1.
             results: list[tuple[bytes, int]] = []
             for entry in batch:
-                results.append(await provider.synth(entry.text, effective_voice))
+                normalized_text = normalize_chinese_text(entry.text)
+                results.append(await provider.synth(normalized_text, effective_voice))
             nonlocal completed
             completed += len(batch)
             self._report_progress(total=total, completed=completed)

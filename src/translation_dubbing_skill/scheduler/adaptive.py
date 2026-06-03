@@ -520,6 +520,9 @@ class AdaptiveScheduler(Generic[I, O]):
             )
 
             if rate_limited:
+                new_batch = max(state.batch_size // 2, self._config.batch_size_min)
+                new_concurrency = max(state.concurrency // 2, self._config.concurrency_min)
+                print(f"⚠️ [Rate Limit] Upstream throttled. Scaling down scheduler: batch_size={new_batch}, concurrency={new_concurrency}. Retrying in {raw_retry_after if raw_retry_after is not None else 'exponential backoff'}s...")
                 await self._handle_rate_limited(
                     batch,
                     exc,
@@ -529,6 +532,8 @@ class AdaptiveScheduler(Generic[I, O]):
                 )
                 return
             if payload_too_large:
+                new_payload = max(state.payload_size // 2, self._config.payload_size_min)
+                print(f"⚠️ [Payload Too Large] Overflow detected. Slicing down: new payload_size={new_payload}. Re-slicing batch of size {len(batch.items)}...")
                 await self._handle_payload_too_large(
                     batch,
                     exc,
@@ -537,6 +542,7 @@ class AdaptiveScheduler(Generic[I, O]):
                 )
                 return
             # Treat anything else as a transient error: backoff + retry.
+            print(f"⚠️ [Transient Error] {type(exc).__name__}: {exc}. Retrying batch with backoff...")
             await self._handle_transient(
                 batch,
                 exc,
