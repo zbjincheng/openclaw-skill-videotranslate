@@ -60,14 +60,11 @@ def _digits_to_chinese(num_str: str) -> str:
     return result
 
 
-def normalize_chinese_text(text: str) -> str:
-    """Normalize raw translated text to natural spoken Chinese.
+def normalize_text(text: str, voice_id: str | None = None) -> str:
+    """Normalize raw translated text to natural spoken form.
 
-    Rules:
-    - Percentages: '25%' -> '百分之二十五'
-    - Integers: '100' -> '一百', '99' -> '九十九'
-    - Clean markdown: '**', '*', '_', etc.
-    - Keep punctuation marks that yield natural pauses (, . ? !) but clean brackets.
+    Cleans markdown, brackets, and extra spaces for all languages.
+    Performs Chinese number/percentage expansion if voice_id indicates Chinese.
     """
     if not text:
         return ""
@@ -82,17 +79,24 @@ def normalize_chinese_text(text: str) -> str:
     normalized = re.sub(r"\*|_", "", normalized)
     normalized = re.sub(r"[\(\)\[\]]", " ", normalized)
 
-    # 2. Normalize Percentages (e.g. 25% -> 百分之二十五)
-    def repl_percent(match: re.Match) -> str:
-        num = match.group(1)
-        return f"百分之{_digits_to_chinese(num)}"
-    normalized = re.sub(r"(\d+)%", repl_percent, normalized)
+    # Detect if target language/voice is Chinese
+    is_chinese = False
+    if voice_id:
+        v_lower = voice_id.lower()
+        is_chinese = v_lower.startswith("zh") or "chinese" in v_lower
 
-    # 3. Normalize integers (e.g. 100 -> 一百, 9折 -> 九折)
-    def repl_digits(match: re.Match) -> str:
-        num = match.group(0)
-        return _digits_to_chinese(num)
-    normalized = re.sub(r"\d+", repl_digits, normalized)
+    if is_chinese:
+        # 2. Normalize Percentages (e.g. 25% -> 百分之二十五)
+        def repl_percent(match: re.Match) -> str:
+            num = match.group(1)
+            return f"百分之{_digits_to_chinese(num)}"
+        normalized = re.sub(r"(\d+)%", repl_percent, normalized)
+
+        # 3. Normalize integers (e.g. 100 -> 一百, 9折 -> 九折)
+        def repl_digits(match: re.Match) -> str:
+            num = match.group(0)
+            return _digits_to_chinese(num)
+        normalized = re.sub(r"\d+", repl_digits, normalized)
 
     # 4. Collapse extra spaces
     normalized = re.sub(r"\s+", " ", normalized).strip()
@@ -100,4 +104,9 @@ def normalize_chinese_text(text: str) -> str:
     return normalized
 
 
-__all__ = ["normalize_chinese_text"]
+def normalize_chinese_text(text: str) -> str:
+    """Normalize raw translated text to natural spoken Chinese (deprecated: use normalize_text instead)."""
+    return normalize_text(text, "zh")
+
+
+__all__ = ["normalize_text", "normalize_chinese_text"]

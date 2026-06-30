@@ -1,17 +1,17 @@
 # video-subtitle-translation-dubbing
 
-**OpenClaw 技能** —— 将英文视频字幕翻译为简体中文，并按需生成中文配音后的多音轨、多字幕轨视频。
+**OpenClaw 技能** —— 支持多语言视频字幕翻译与自动配音，并按需生成配音后的多音轨、多字幕轨视频。
 
 - **Name**: `video-subtitle-translation-dubbing`
-- **Version**: `0.1.0`
+- **Version**: `0.1.1`
 - **Entrypoint**: `translation_dubbing_skill.run`
 - **Manifest**: [`manifest.yaml`](./manifest.yaml)
 
 ## 概述
 
-该技能读取英文视频（附带外挂字幕或使用视频内嵌英文字幕），输出：
+该技能读取输入视频（支持外挂字幕或自动提取视频内嵌字幕轨），输出：
 
-- 独立的简体中文字幕文件（UTF-8 SRT/VTT）
+- 独立的翻译后目标语言字幕文件（UTF-8 SRT/VTT）
 - 一段合成后的 `.mkv` 视频
 
 调用方通过 `processing_mode` 参数选择两种处理模式之一：
@@ -49,8 +49,9 @@ print(result.output_video_path, result.output_subtitle_path)
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `video_path` | path | 是 | 输入视频文件，扩展名必须在 `supported_video_formats` 内 |
-| `subtitle_path` | path | 否 | 外挂英文字幕（`.srt` / `.vtt`）；缺失时从视频提取内嵌英文字幕轨 |
-| `target_language` | enum | 是 | 固定为 `zh-CN` |
+| `subtitle_path` | path | 否 | 外挂字幕（`.srt` / `.vtt`）；缺失时从视频提取内嵌字幕轨 |
+| `source_language` | string | 是 | 原始视频/字幕语言代码（默认 `en`） |
+| `target_language` | string | 是 | 目标翻译/TTS语言代码（默认 `zh-CN`） |
 | `processing_mode` | enum | 是 | `subtitle_only` \| `subtitle_and_dubbing`（默认） |
 | `voice_id` | string | 否 | TTS 语音标识；`subtitle_only` 模式下忽略 |
 | `translation_provider` | enum | 是 | `llm` \| `web` |
@@ -167,7 +168,7 @@ AIMD 策略：连续成功升档；命中 `429`（`RateLimitError`）乘性降�
 
 ## 限制与边界
 
-- 目标语言固定为简体中文（`zh-CN`）
+- 目标语音合成发音人可通过 `voice_id` 显式设置；若缺省则会根据目标语种代码自动进行默认高保真声线映射（Edge-TTS 支持 `en`, `zh`, `ja`, `es`, `fr`, `de`, `ko` 等常用语种）
 - 输出视频固定为 Matroska（`.mkv`）容器
 - 音频变速通过 ffmpeg `atempo` 滤镜链实现，单阶段范围 `[0.5, 2.0]`，链式组合支持任意正速率
 - 对齐算法保证与输入视频时长误差 ≤ 100 ms

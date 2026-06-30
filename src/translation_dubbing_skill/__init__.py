@@ -17,7 +17,7 @@ runtime receives a fully-wired skill in one import.
 from translation_dubbing_skill import providers  # noqa: F401
 from translation_dubbing_skill.entry import ManifestParams, parse_manifest, run
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "__version__",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from translation_dubbing_skill.tts.text_normalizer import normalize_chinese_text
+from translation_dubbing_skill.tts.text_normalizer import normalize_chinese_text, normalize_text
 
 
 @pytest.mark.parametrize(
@@ -31,3 +31,24 @@ from translation_dubbing_skill.tts.text_normalizer import normalize_chinese_text
 )
 def test_normalize_chinese_text(input_text: str, expected: str) -> None:
     assert normalize_chinese_text(input_text) == expected
+
+
+@pytest.mark.parametrize(
+    "input_text,voice_id,expected",
+    [
+        # English: markdown cleaned, but digits kept intact
+        ("**Bold** and *Italic*", "en-US-GuyNeural", "Bold and Italic"),
+        ("[Link text](url)", "en", "Link text"),
+        ("It increased by 25%", "en", "It increased by 25%"),
+        ("Costs 100 dollars", "en", "Costs 100 dollars"),
+        ("In 2026", "en-US", "In 2026"),
+        # Japanese: digits kept intact
+        ("価格は 100 円です", "ja-JP", "価格は 100 円です"),
+        # Chinese: digits normalized
+        ("增长了 25%", "zh-CN-YunxiNeural", "增长了 百分之二十五"),
+        ("100", "zh-TW-HsiaoChenNeural", "一百"),
+    ],
+)
+def test_normalize_text_multilingual(input_text: str, voice_id: str, expected: str) -> None:
+    assert normalize_text(input_text, voice_id) == expected
+
