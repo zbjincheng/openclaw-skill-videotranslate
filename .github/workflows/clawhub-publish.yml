@@ -3,7 +3,11 @@ name: Publish Skill to ClawHub
 on:
   push:
     tags:
-      - 'v*' # Trigger ClawHub publish workflow when pushing version tags like v0.1.2
+      - 'v*' # Trigger ClawHub publish workflow when pushing version tags like v0.1.3
+
+permissions:
+  contents: read
+  id-token: write # Grant id-token: write permission required by ClawHub's reusable workflow OIDC authentication
 
 jobs:
   publish:
