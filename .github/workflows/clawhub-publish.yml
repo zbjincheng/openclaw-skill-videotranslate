@@ -19,11 +19,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Publish Skill to ClawHub Registry
+      - name: Log in to ClawHub
         env:
           CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          npx clawhub login --token "$CLAWHUB_TOKEN"
+
+      - name: Publish Skill to ClawHub Registry
         run: |
           npx clawhub skill publish ./ \
             --slug video-subtitle-translation-dubbing \
