@@ -1,7 +1,7 @@
 ---
 name: video-subtitle-translation-dubbing
 description: Multi-language video subtitle translation and automatic dubbing skill (supports English, Chinese, Japanese, Spanish, French, German, Korean, etc.).
-version: 0.1.2
+version: 0.1.3
 metadata:
   openclaw:
     requires:
@@ -19,7 +19,7 @@ metadata:
 **OpenClaw Skill** — Multi-language video subtitle translation and automatic dubbing, producing high-quality multi-track, multi-subtitle videos on demand.
 
 - **Name**: `video-subtitle-translation-dubbing`
-- **Version**: `0.1.2`
+- **Version**: `0.1.3`
 - **Entrypoint**: `translation_dubbing_skill.run`
 - **Manifest**: [`manifest.yaml`](./manifest.yaml)
 

@@ -203,6 +203,8 @@ class AudioAligner:
             # the available window (INV3).
             if len(segment) > available:
                 segment = segment[:available]
+            if len(segment) >= 20:
+                segment = segment.fade_in(10).fade_out(10)
             placed_duration = len(segment)
             return segment, target_start, placed_duration
 
@@ -211,6 +213,8 @@ class AudioAligner:
         rate = duration_ms / available
         if abs(rate - 1.0) < 0.005:
             segment = source[:available]
+            if len(segment) >= 20:
+                segment = segment.fade_in(10).fade_out(10)
             placed_duration = len(segment)
             return segment, target_start, placed_duration
 
@@ -221,6 +225,8 @@ class AudioAligner:
             # atempo's output length is subject to its own rounding; truncate
             # to honour INV3 (R8.3 fallback).
             sped = sped[:available]
+        if len(sped) >= 20:
+            sped = sped.fade_in(10).fade_out(10)
         placed_duration = len(sped)
         return sped, target_start, placed_duration
 
