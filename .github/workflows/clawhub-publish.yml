@@ -1,0 +1,14 @@
+name: Publish Skill to ClawHub
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger ClawHub publish workflow when pushing version tags like v0.1.2
+
+jobs:
+  publish:
+    uses: openclaw/clawhub/.github/workflows/skill-publish.yml@main
+    with:
+      dry_run: false
+    secrets:
+      clawhub_token: ${{ secrets.CLAWHUB_TOKEN }}
