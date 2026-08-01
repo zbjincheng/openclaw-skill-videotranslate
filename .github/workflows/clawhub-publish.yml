@@ -31,5 +31,6 @@ jobs:
         run: |
           npx clawhub skill publish ./ \
             --slug video-subtitle-translation-dubbing \
+            --owner zbjincheng \
             --name "Video Subtitle Translation & Dubbing" \
             --version "${GITHUB_REF#refs/tags/v}"
