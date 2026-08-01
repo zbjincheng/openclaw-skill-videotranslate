@@ -183,6 +183,12 @@ class AudioAligner:
             return None
 
         source = AudioSegment.from_file(BytesIO(clip.audio), format="wav")
+        # Peak-normalize non-silent clips to maintain consistent loudness across synthesized TTS clips
+        if len(source) > 0 and getattr(source, "max_dBFS", float("-inf")) > float("-inf"):
+            try:
+                source = source.normalize()
+            except Exception:
+                pass
 
         # ``duration_ms`` on the clip is the provider-reported duration;
         # fall back to the measured duration if they disagree so the

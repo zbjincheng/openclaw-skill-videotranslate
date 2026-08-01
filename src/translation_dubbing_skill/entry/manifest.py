@@ -65,7 +65,16 @@ ALLOWED_PROCESSING_MODES: Final[tuple[str, ...]] = tuple(m.value for m in Proces
 # manifest schema's ``supported_video_formats`` default (design §"清单
 # 文件 Schema"). Comparisons are case-insensitive; values are stored
 # lowercase and without a leading dot.
-DEFAULT_SUPPORTED_VIDEO_FORMATS: Final[tuple[str, ...]] = ("mp4", "mkv", "mov", "webm")
+DEFAULT_SUPPORTED_VIDEO_FORMATS: Final[tuple[str, ...]] = (
+    "mp4",
+    "mkv",
+    "mov",
+    "webm",
+    "avi",
+    "flv",
+    "ts",
+    "wmv",
+)
 
 # Supported subtitle extensions (R10.4). Same normalization rules as for
 # video formats.

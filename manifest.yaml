@@ -12,7 +12,7 @@
 #   R12.3, R12.4 — rate-limit defaults for both adapters
 
 name: video-subtitle-translation-dubbing
-version: 0.1.1
+version: 0.1.2
 description: 英文视频翻译配音技能（English→Chinese subtitle translation and dubbing）
 entrypoint:
   module: translation_dubbing_skill
@@ -133,4 +133,4 @@ outputs:
     type: path
     description: 翻译后的中文字幕 UTF-8 文件路径（R9.16）
 
-supported_video_formats: [mp4, mkv, mov, webm]
+supported_video_formats: [mp4, mkv, mov, webm, avi, flv, ts, wmv]

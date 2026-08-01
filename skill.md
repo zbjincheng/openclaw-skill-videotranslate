@@ -3,7 +3,7 @@
 **OpenClaw 技能** —— 支持多语言视频字幕翻译与自动配音，并按需生成配音后的多音轨、多字幕轨视频。
 
 - **Name**: `video-subtitle-translation-dubbing`
-- **Version**: `0.1.1`
+- **Version**: `0.1.2`
 - **Entrypoint**: `translation_dubbing_skill.run`
 - **Manifest**: [`manifest.yaml`](./manifest.yaml)
 

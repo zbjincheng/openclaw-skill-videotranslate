@@ -118,14 +118,14 @@ def test_parse_manifest_invalid_provider_type(tmp_path: Path) -> None:
 
 
 def test_parse_manifest_unsupported_video_format(tmp_path: Path) -> None:
-    video = tmp_path / "clip.avi"
+    video = tmp_path / "clip.xyz"
     video.write_bytes(b"x")
     params = _base_params(tmp_path)
     params["video_path"] = str(video)
 
     with pytest.raises(UnsupportedVideoFormatError) as exc_info:
         parse_manifest(params)
-    assert exc_info.value.context["given_ext"] == "avi"
+    assert exc_info.value.context["given_ext"] == "xyz"
     assert set(exc_info.value.context["supported"]) == set(DEFAULT_SUPPORTED_VIDEO_FORMATS)
 
 
