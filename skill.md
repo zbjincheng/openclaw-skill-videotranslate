@@ -1,179 +1,155 @@
 # video-subtitle-translation-dubbing
 
-**OpenClaw 技能** —— 支持多语言视频字幕翻译与自动配音，并按需生成配音后的多音轨、多字幕轨视频。
+[English] | [简体中文](./skill.zh-CN.md)
+
+**OpenClaw Skill** — Multi-language video subtitle translation and automatic dubbing, producing high-quality multi-track, multi-subtitle videos on demand.
 
 - **Name**: `video-subtitle-translation-dubbing`
 - **Version**: `0.1.2`
 - **Entrypoint**: `translation_dubbing_skill.run`
 - **Manifest**: [`manifest.yaml`](./manifest.yaml)
 
-## 概述
+## Overview
 
-该技能读取输入视频（支持外挂字幕或自动提取视频内嵌字幕轨），输出：
+This skill processes input videos (via external subtitles or by auto-extracting embedded subtitle tracks) and produces:
 
-- 独立的翻译后目标语言字幕文件（UTF-8 SRT/VTT）
-- 一段合成后的 `.mkv` 视频
+- An independent translated target-language subtitle file (UTF-8 SRT/VTT)
+- A muxed `.mkv` video file
 
-调用方通过 `processing_mode` 参数选择两种处理模式之一：
+Callers select one of two processing modes via `processing_mode`:
 
-| 处理模式 | TTS | 音轨 | 字幕轨 |
-|---------|-----|------|--------|
-| `subtitle_only` | 跳过 | 仅保留原英文音轨（默认） | 中文字幕轨（默认）+ 英文原字幕轨 |
-| `subtitle_and_dubbing`（默认） | 合成中文配音 | 中文配音（默认）+ 英文原音轨 | 中文字幕轨（默认）+ 英文原字幕轨 |
+| Processing Mode | TTS | Audio Track | Subtitle Tracks |
+|---|---|---|---|
+| `subtitle_only` | Skipped | Source audio track only (default) | Target subtitle (default) + Source subtitle |
+| `subtitle_and_dubbing` (default) | Synthesizes target voiceover | Target dubbing (default) + Source audio | Target subtitle (default) + Source subtitle |
 
-## 快速开始
+## Quick Start
 
 ```python
 from translation_dubbing_skill import parse_manifest, run
 
 params = parse_manifest({
     "video_path": "/path/to/input.mp4",
-    "subtitle_path": "/path/to/input.en.srt",   # 可选
+    "subtitle_path": "/path/to/input.en.srt",   # Optional
+    "source_language": "en",
+    "target_language": "zh-CN",
     "processing_mode": "subtitle_and_dubbing",
     "translation_provider": "llm",
     "translation_endpoint": "https://api.example.com/v1/chat/completions",
     "translation_credential": "sk-...",
     "translation_config": {"model_name": "gpt-4o-mini"},
-    "tts_provider": "web",
-    "tts_endpoint": "https://api.example.com/tts",
-    "tts_credential": "sk-...",
-    "tts_config": {"default_voice": "zh-CN-XiaoxiaoNeural"},
+    "tts_provider": "edge",
+    "tts_endpoint": "none",
+    "tts_credential": "none",
 })
 
 result = await run(params)
 print(result.output_video_path, result.output_subtitle_path)
 ```
 
-## 输入
+## Inputs
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `video_path` | path | 是 | 输入视频文件，扩展名必须在 `supported_video_formats` 内 |
-| `subtitle_path` | path | 否 | 外挂字幕（`.srt` / `.vtt`）；缺失时从视频提取内嵌字幕轨 |
-| `source_language` | string | 是 | 原始视频/字幕语言代码（默认 `en`） |
-| `target_language` | string | 是 | 目标翻译/TTS语言代码（默认 `zh-CN`） |
-| `processing_mode` | enum | 是 | `subtitle_only` \| `subtitle_and_dubbing`（默认） |
-| `voice_id` | string | 否 | TTS 语音标识；`subtitle_only` 模式下忽略 |
-| `translation_provider` | enum | 是 | `llm` \| `web` |
-| `translation_endpoint` | string | 是 | 翻译提供方 HTTP 端点 |
-| `translation_credential` | secret | 是 | 翻译凭证（日志/错误对象中会脱敏为 `***`） |
-| `translation_config` | object | 否 | 翻译提供方自定义配置 |
-| `translation_rate_limit` | object | 否 | 批量/文本量/并发自适应配置 |
-| `tts_provider` | enum | 条件必填 | `llm` \| `web`；`subtitle_and_dubbing` 模式下必填 |
-| `tts_endpoint` | string | 条件必填 | TTS 提供方 HTTP 端点 |
-| `tts_credential` | secret | 条件必填 | TTS 凭证 |
-| `tts_config` | object | 否 | TTS 提供方自定义配置 |
-| `tts_rate_limit` | object | 否 | TTS 自适应调度配置 |
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `video_path` | path | Yes | Input video file path (extension must be in `supported_video_formats`) |
+| `subtitle_path` | path | No | External subtitle file (`.srt` / `.vtt`); extracts embedded track if omitted |
+| `source_language` | string | Yes | Source video/subtitle language code (default `en`) |
+| `target_language` | string | Yes | Target translation/TTS language code (default `zh-CN`) |
+| `processing_mode` | enum | Yes | `subtitle_only` \| `subtitle_and_dubbing` (default) |
+| `voice_id` | string | No | TTS voice identifier; ignored in `subtitle_only` mode |
+| `translation_provider` | enum | Yes | `llm` \| `web` |
+| `translation_endpoint` | string | Yes | HTTP endpoint for translation service |
+| `translation_credential` | secret | Yes | API key / credential (desensitized as `***` in logs/errors) |
+| `translation_config` | object | No | Custom translation provider configuration |
+| `translation_rate_limit` | object | No | Adaptive scheduler configuration (batch/payload/concurrency) |
+| `tts_provider` | enum | Conditional | `llm` \| `web` \| `edge`; required when mode is `subtitle_and_dubbing` |
+| `tts_endpoint` | string | Conditional | HTTP endpoint for TTS service |
+| `tts_credential` | secret | Conditional | API key / credential for TTS service |
+| `tts_config` | object | No | Custom TTS provider configuration |
+| `tts_rate_limit` | object | No | Adaptive scheduler configuration for TTS |
 
-完整字段定义与默认值见 [`manifest.yaml`](./manifest.yaml)。
+For full parameter definitions and defaults, see [`manifest.yaml`](./manifest.yaml).
 
-## 输出
+## Outputs
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `output_video_path` | path | 合成后的 `.mkv` 视频 |
-| `output_subtitle_path` | path | 中文字幕文件（UTF-8 SRT/VTT，格式与输入一致） |
+| Field | Type | Description |
+|---|---|---|
+| `output_video_path` | path | Path to the synthesized `.mkv` video |
+| `output_subtitle_path` | path | Path to the translated target-language UTF-8 subtitle file |
 
-### 输出视频结构
+### Output Video Track Structure
 
-**`subtitle_and_dubbing`** 模式：
+**`subtitle_and_dubbing`** mode:
 
 ```
 streams:
-  video:  video  (codec copy, 保持分辨率/帧率/编码)
-  audio:  zh     (AAC, language=zho, default=1, title="中文配音")
-          en     (copy, language=eng, default=0, title="Original English")
-  subs:   zh     (SRT, language=zho, default=1, title="中文")
-          en     (SRT, language=eng, default=0, title="English")
+  video:  video  (codec copy, preserving resolution/fps/encoding)
+  audio:  target (AAC, language=target, default=1, title="Target Dubbing")
+          source (copy, language=source, default=0, title="Original Audio")
+  subs:   target (SRT, language=target, default=1, title="Target Subtitle")
+          source (SRT, language=source, default=0, title="Original Subtitle")
 ```
 
-**`subtitle_only`** 模式：
+**`subtitle_only`** mode:
 
 ```
 streams:
   video:  video  (codec copy)
-  audio:  en     (copy, language=eng, default=1)
-  subs:   zh     (SRT, language=zho, default=1)
-          en     (SRT, language=eng, default=0)
+  audio:  source (copy, language=source, default=1)
+  subs:   target (SRT, language=target, default=1)
+          source (SRT, language=source, default=0)
 ```
 
-## 进度事件
+## Progress Reporting
 
-该技能通过 OpenClaw 运行时注入的进度回调逐阶段上报执行进度：
+The skill reports progress stage-by-stage via the progress callback injected by the OpenClaw runtime:
 
 ```
 parsing → translating → [tts] → muxing → done
 ```
 
-- `translating` 阶段携带 `completed / total`（已翻译条目数 / 总条目数），严格单调不减
-- `tts` 阶段仅在 `subtitle_and_dubbing` 模式下出现，同样携带进度计数
-- `done` 阶段在 `extra` 中返回 `output_video_path / output_subtitle_path`
+- `translating` stage includes `completed / total` counts (monotonic non-decreasing)
+- `tts` stage occurs only in `subtitle_and_dubbing` mode and also reports progress counts
+- `done` stage returns `output_video_path / output_subtitle_path` in `extra`
 
-## 可插拔提供方
+## Pluggable Providers
 
-内置四类提供方（通过 `@register` 在模块加载时自动注册）：
+Built-in providers (auto-registered via `@register` upon module loading):
 
-| kind | provider_type | 说明 |
-|------|--------------|------|
-| `translation` | `llm` | 调用大语言模型翻译端点；批量 JSON 数组往返 |
-| `translation` | `web` | 调用第三方翻译 REST API |
-| `tts` | `llm` | 调用大语言模型 TTS 端点（支持批量） |
-| `tts` | `web` | 调用第三方 TTS REST API（单条） |
+| Kind | Provider Type | Description |
+|---|---|---|
+| `translation` | `llm` | Invokes LLM chat completion endpoints with batch JSON payloads |
+| `translation` | `web` | Invokes 3rd-party translation REST APIs |
+| `tts` | `llm` | Invokes LLM TTS endpoints (supports batching) |
+| `tts` | `web` | Invokes 3rd-party TTS REST APIs (single item) |
+| `tts` | `edge` | Invokes built-in Microsoft Edge Read-Aloud TTS service |
 
-新增提供方只需在 `translation_dubbing_skill.providers.{translation,tts}` 下实现协议并用 `@register(kind, provider_type)` 装饰即可，**调用方代码无需改动**。
+New providers can be added by implementing the protocol under `translation_dubbing_skill.providers.{translation,tts}` and decorating with `@register(kind, provider_type)`. **No caller code changes required.**
 
-## 自适应调度
+## Adaptive Scheduler
 
-翻译与 TTS 调用统一由 `AdaptiveScheduler` 驱动，三维自适应：
+Translation and TTS requests are driven by `AdaptiveScheduler`, featuring 3D adaptive tuning:
 
-- **批量大小**（batch_size）：一次请求携带的条目数
-- **单次请求文本量**（payload_size）：按字符数或估算 token 数衡量
-- **并发度**（concurrency）：同时未完成的请求数
+- **Batch Size** (`batch_size`): Number of entries per request
+- **Payload Size** (`payload_size`): Text length measured in tokens or characters
+- **Concurrency** (`concurrency`): Number of simultaneous in-flight requests
 
-AIMD 策略：连续成功升档；命中 `429`（`RateLimitError`）乘性降档三维 + 退避等待（优先使用 `Retry-After`）；命中 `413` 或上下文窗口超长（`PayloadTooLargeError`）仅降 `payload_size` 并重新切分且不占用重试预算；`5xx`/超时（`TransientError`）退避重试但不降档。
+Uses AIMD strategy: scales up on consecutive successes; scales down on `429` (`RateLimitError`) with exponential backoff; reduces `payload_size` and re-slices without penalty on `413` / context window overflow (`PayloadTooLargeError`); retries with backoff on `5xx` / timeouts (`TransientError`).
 
-默认参数见 `manifest.yaml` 的 `translation_rate_limit / tts_rate_limit.default`。
+Default parameters are specified in `manifest.yaml` under `translation_rate_limit / tts_rate_limit.default`.
 
-## 错误模型
+## Error Handling
 
-所有错误都是 `SkillError` 的子类，携带 `stage / code / reason / context` 四元组。敏感键（`credential / api_key / authorization`）在 `to_dict()` 序列化时自动脱敏为 `***`。
+All exceptions inherit from `SkillError`, carrying a `stage / code / reason / context` tuple. Sensitive keys (`credential / api_key / authorization`) are automatically masked as `***` during `to_dict()` serialization.
 
-常见错误：
-
-| 错误类 | 阶段 | 触发条件 |
-|--------|------|---------|
-| `UnsupportedProcessingModeError` | input | 处理模式不在枚举内 |
-| `UnsupportedProviderTypeError` | input | 提供方类型不在 `{llm, web}` |
-| `ManifestParamMissingError` | input | 必填字段缺失（如 `subtitle_and_dubbing` 模式下缺 TTS 凭证） |
-| `UnsupportedVideoFormatError` | input | 视频扩展名不在支持列表 |
-| `UnsupportedSubtitleFormatError` | input | 字幕非 `.srt` / `.vtt` |
-| `VideoFileInaccessibleError` | input | 视频文件不存在/不可读 |
-| `SubtitleParseError` | parsing | 字幕语法错误（携带 `line_number`） |
-| `InvalidTimestampError` | parsing | `start_ms > end_ms`（携带 `entry_index`） |
-| `NoEnglishSubtitleError` | parsing | 无外挂字幕且视频无内嵌英文字幕轨 |
-| `ProviderNotRegisteredError` | translating/tts | 类型标识未注册 |
-| `ProviderUnavailableError` | translating/tts | 提供方初始化/调用不可用 |
-| `TranslationError` / `TTSError` | translating/tts | 超过最大重试次数 |
-| `ProviderContractViolationError` | translating/tts | 提供方返回违反结构/语义契约 |
-| `VideoDecodeError` | muxing | 视频解码失败 |
-| `OriginalAudioExtractionError` | muxing | 无法提取原英文音轨 |
-
-## 环境依赖
+## Prerequisites
 
 - **Python** ≥ 3.11
-- **ffmpeg** / **ffprobe**：必须在 `PATH` 中可用。用于字幕提取、音频变速/对齐、视频合成、元数据探测
-- **httpx**：HTTP 客户端
-- **pydub**：音频拼接
-- **PyYAML**：解析 manifest（仅在冒烟测试中使用）
+- **ffmpeg** / **ffprobe**: Must be available in `PATH`. Used for subtitle extraction, audio time-stretching, video muxing, and media probing.
+- **httpx**: HTTP client
+- **pydub**: Audio segment manipulation and peak normalization
+- **PyYAML**: Manifest parsing
 
-## 限制与边界
+## License
 
-- 目标语音合成发音人可通过 `voice_id` 显式设置；若缺省则会根据目标语种代码自动进行默认高保真声线映射（Edge-TTS 支持 `en`, `zh`, `ja`, `es`, `fr`, `de`, `ko` 等常用语种）
-- 输出视频固定为 Matroska（`.mkv`）容器
-- 音频变速通过 ffmpeg `atempo` 滤镜链实现，单阶段范围 `[0.5, 2.0]`，链式组合支持任意正速率
-- 对齐算法保证与输入视频时长误差 ≤ 100 ms
-- `subtitle_only` 模式下调用方提供的 `tts_*` 字段与 `voice_id` 被**完全忽略**
-
-## 许可与归属
-
-见仓库根目录的 `LICENSE` 与 `pyproject.toml` 声明。
+See `LICENSE` and `pyproject.toml` in the repository root.

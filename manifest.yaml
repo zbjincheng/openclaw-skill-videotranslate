@@ -4,16 +4,10 @@
 # and field semantics. Enumerations, required_when conditions and defaults
 # mirror the design exactly so the runtime, the Python entry module and
 # the property tests stay in lockstep.
-#
-# Requirements satisfied:
-#   R1.1–R1.8   — manifest declares all input/output fields + processing mode
-#   R1.3        — processing_mode enum + default
-#   R1.4, R1.6  — translation_/tts_ enum values and required_when conditions
-#   R12.3, R12.4 — rate-limit defaults for both adapters
 
 name: video-subtitle-translation-dubbing
 version: 0.1.2
-description: 英文视频翻译配音技能（English→Chinese subtitle translation and dubbing）
+description: Multi-language video subtitle translation and dubbing skill (English, Chinese, Japanese, Spanish, etc.)
 entrypoint:
   module: translation_dubbing_skill
   function: run
@@ -22,52 +16,52 @@ inputs:
   video_path:
     type: path
     required: true
-    description: 输入视频文件路径（R1.2）
+    description: Path to the input video file
   subtitle_path:
     type: path
     required: false
-    description: 可选的外挂字幕文件（.srt / .vtt）；缺失时从视频内嵌英文字幕轨提取
+    description: Optional external subtitle file (.srt / .vtt); extracts embedded subtitle track if omitted
   source_language:
     type: string
     required: true
     default: en
-    description: 原始视频字幕语言（如 en, zh-CN, ja 等）（R1.2）
+    description: Source video/subtitle language code (e.g. en, zh-CN, ja, etc.)
   target_language:
     type: string
     required: true
     default: zh-CN
-    description: 目标翻译语言（如 zh-CN, en, ja 等）（R1.2）
+    description: Target translation and TTS voiceover language code (e.g. zh-CN, en, ja, etc.)
   processing_mode:
     type: enum
     values: [subtitle_only, subtitle_and_dubbing]
     required: true
     default: subtitle_and_dubbing
-    description: 处理模式（R1.3）。subtitle_only 跳过 TTS 与音频对齐。
+    description: Processing mode. subtitle_only skips TTS voiceover and audio alignment.
   voice_id:
     type: string
     required: false
-    description: TTS 语音 id；subtitle_only 模式下被忽略（R1.7）
+    description: TTS voice identifier; ignored in subtitle_only mode
   translation_provider:
     type: enum
     values: [llm, web]
     required: true
-    description: 翻译提供方类型标识（R1.4, R1.12）
+    description: Translation provider type identifier
   translation_endpoint:
     type: string
     required: true
-    description: 翻译提供方 HTTP 端点
+    description: HTTP endpoint for translation service
   translation_credential:
     type: secret
     required: true
-    description: 翻译提供方凭证；错误/日志对象中会被脱敏
+    description: Translation provider credential; automatically desensitized in logs and error objects
   translation_config:
     type: object
     required: false
-    description: 翻译提供方自定义配置（如 model_name / language_pair）
+    description: Custom configuration for translation provider (e.g. model_name / language_pair)
   translation_rate_limit:
     type: object
     required: false
-    description: 翻译提供方自适应调度配置（R12.3）
+    description: Adaptive scheduler rate limit configuration for translation provider
     default:
       batch_size_initial: 20
       batch_size_min: 1
@@ -89,25 +83,25 @@ inputs:
     values: [llm, web]
     required_when:
       processing_mode: subtitle_and_dubbing
-    description: 语音合成提供方类型标识（R1.6, R1.12）；subtitle_only 模式下忽略（R1.7）
+    description: TTS provider type identifier; ignored in subtitle_only mode
   tts_endpoint:
     type: string
     required_when:
       processing_mode: subtitle_and_dubbing
-    description: 语音合成提供方 HTTP 端点
+    description: HTTP endpoint for TTS provider
   tts_credential:
     type: secret
     required_when:
       processing_mode: subtitle_and_dubbing
-    description: 语音合成提供方凭证；脱敏同上
+    description: TTS provider credential; desensitized in logs and errors
   tts_config:
     type: object
     required: false
-    description: 语音合成提供方自定义配置（如 model_name, default_voice）
+    description: Custom configuration for TTS provider (e.g. model_name, default_voice)
   tts_rate_limit:
     type: object
     required: false
-    description: 语音合成提供方自适应调度配置（R12.4）
+    description: Adaptive scheduler rate limit configuration for TTS provider
     default:
       batch_size_initial: 1
       batch_size_min: 1
@@ -128,9 +122,9 @@ inputs:
 outputs:
   output_video_path:
     type: path
-    description: 合成后的 .mkv 输出视频路径（R9.16）
+    description: Path to the output synthesized .mkv video
   output_subtitle_path:
     type: path
-    description: 翻译后的中文字幕 UTF-8 文件路径（R9.16）
+    description: Path to the translated target-language UTF-8 subtitle file
 
 supported_video_formats: [mp4, mkv, mov, webm, avi, flv, ts, wmv]
