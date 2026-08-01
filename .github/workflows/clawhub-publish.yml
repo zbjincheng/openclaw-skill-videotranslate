@@ -7,12 +7,13 @@ on:
 
 permissions:
   contents: read
-  id-token: write # Grant id-token: write permission required by ClawHub's reusable workflow OIDC authentication
+  id-token: write
 
 jobs:
   publish:
     uses: openclaw/clawhub/.github/workflows/skill-publish.yml@main
     with:
+      skill_path: '.' # Specify the skill folder path (root directory of repo)
       dry_run: false
     secrets:
       clawhub_token: ${{ secrets.CLAWHUB_TOKEN }}
