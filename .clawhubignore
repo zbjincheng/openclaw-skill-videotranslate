@@ -1,0 +1,13 @@
+# ClawHub publishing ignore rules
+.git/
+.github/
+tests/
+fixtures/
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
