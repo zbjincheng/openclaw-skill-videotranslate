@@ -1,3 +1,17 @@
+---
+name: video-subtitle-translation-dubbing
+description: Multi-language video subtitle translation and automatic dubbing skill (supports English, Chinese, Japanese, Spanish, French, German, Korean, etc.).
+version: 0.1.2
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - ffmpeg
+        - ffprobe
+    emoji: "🎬"
+    homepage: https://github.com/zbjincheng/openclaw-skill-videotranslate
+---
+
 # video-subtitle-translation-dubbing
 
 [English] | [简体中文](./skill.zh-CN.md)
